@@ -1,0 +1,10 @@
+<block>
+    <local>
+        <x />
+        <literal> 5.0 </literal>
+    </local>
+    <print>
+        <x />
+    </print>
+    <literal> "party" </literal>
+</block>
