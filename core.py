@@ -38,13 +38,16 @@ def parse(path): # just rejigging
   [result] = result
   return result
 
-class FuncMagic:
+class MagicFunc:
   __slots__ = ("func",)
   def __init__(self,func): self.func = func
 class PassFunc:
   __slots__ = ("func",)
   def __init__(self,func): self.func = func
+  def __repr__(self): return f"<passed {self.func.__name__}>"
 
+def _wrap(env):
+  return noArg(map(setret, env.maps))
 
 def solve(prog, varTable=noArg([dict])):
   # if a function is `magic` pass the entire expression
@@ -60,19 +63,47 @@ def solve(prog, varTable=noArg([dict])):
     case [Ident("block"), *args]:
       tmp = None
       for i in args:
-        tmp = solve(i, noArg([setret(env)]))
+        tmp = solve(i, _wrap(env))
       return tmp
     case [Ident("local"), Ident(var), val, *_]:
-      env[var] = solve(val,noArg([setret(env)]))
+      env[var] = solve(val, _wrap(env))
     case [fnc, *args]:
-      func = solve(fnc, noArg([setret(env)]))
+      func = solve(fnc, _wrap(env))
       if isinstance(func, PassFunc):
-        return func.func(*map(solve, args, repeat(noArg([setret(env)]))))
+        return func.func(*map(solve, args, map(_wrap, repeat(env))))
+      if isinstance(func, MagicFunc):
+        return func.func(env, args)
       assert False, "Not Implemented"
     case [fnc]:
-      return solve(fnc,noArg([setret(env)]))
+      return solve(fnc, _wrap(env))
+
+def XMLlist(*args):
+  return list(args)
+
+def XMLmap(func, *itrs):
+  out = []
+  for args in zip(*itrs):
+    out.append(func.func(*args))
+  return out
+
+def util_XMLimport(package):
+  return {
+    attr : PassFunc(getattr(package, attr))
+    for attr in filter(lambda x: not x.startswith("_"), dir(package))
+  }
+    
 
 if __name__ == "__main__":
   # this should print 5.0 and return `"party"`
-  x = solve(parse("test.xml"), noArg([setret({"print":PassFunc(print)})]))
+  import operator
+  builtinfuncs = {
+    "print": PassFunc(print),
+    "list": PassFunc(XMLlist),
+    "map": PassFunc(XMLmap),
+    **util_XMLimport(operator)
+  }
+  x = solve(parse("test.xml"), noArg(map(setret, [
+    builtinfuncs,
+    {}
+  ])))
   print("Result ::", x)
