@@ -105,20 +105,24 @@ def XMLimport(env, args):
     env.update(util_XMLimport(venv["implib"]))
   else:
     assert False, "Importing xml scripts not implemented"
-    
 
-if __name__ == "__main__":
-  # this should print 5.0 and return `"party"`
+
+def prelude():
   import operator
-  builtinfuncs = {
+  prelude = {
     "print": PassFunc(print),
     "list": PassFunc(XMLlist),
     "map": PassFunc(XMLmap),
     "import": MagicFunc(XMLimport),
+    "range": PassFunc(range),
+    "setattr": PassFunc(setattr),
+    "getattr": PassFunc(getattr),
     **util_XMLimport(operator)
   }
-  x = solve(parse("test.xml"), noArg(map(setret, [
-    builtinfuncs,
-    {}
-  ])))
+  return noArg(map(setret, [prelude, {}]))
+
+if __name__ == "__main__":
+  # this should print 5.0 and return `"party"`
+  
+  x = solve(parse("test.xml"), prelude())
   print("Result ::", x)
