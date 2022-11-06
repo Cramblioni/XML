@@ -1,16 +1,4 @@
 <block>
-    <local>
-        <x />
-        <literal> 5.0 </literal>
-    </local>
-    <map>
-        <print />
-        <list>
-            <lit> "John the inhaler" </lit>
-            <lit> "vs" </lit>
-            <lit> "Dave the exhaler" </lit>
-        </list>
-    </map>
-    <print> <add> <x /> <lit> 10 </lit> </add> </print>
-    <literal> "party" </literal>
+    <import> <external /> <math /> </import>
+    <sin> <truediv> <pi /> <lit> 2.0 </lit> </truediv> </sin>
 </block>

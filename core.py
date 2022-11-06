@@ -87,10 +87,24 @@ def XMLmap(func, *itrs):
   return out
 
 def util_XMLimport(package):
+  def wrap(x): return PassFunc(x) if callable(x) else x
   return {
-    attr : PassFunc(getattr(package, attr))
+    attr : wrap(getattr(package, attr))
     for attr in filter(lambda x: not x.startswith("_"), dir(package))
   }
+
+def XMLimport(env, args):
+  assert len(args) > 0
+  assert isinstance(args[0], Ident)
+
+  if args[0].name == "external":
+    assert len(args) > 1
+    assert isinstance(args[1], Ident)
+    venv = {}
+    exec(f"import {args[1].name} as implib", venv)
+    env.update(util_XMLimport(venv["implib"]))
+  else:
+    assert False, "Importing xml scripts not implemented"
     
 
 if __name__ == "__main__":
@@ -100,6 +114,7 @@ if __name__ == "__main__":
     "print": PassFunc(print),
     "list": PassFunc(XMLlist),
     "map": PassFunc(XMLmap),
+    "import": MagicFunc(XMLimport),
     **util_XMLimport(operator)
   }
   x = solve(parse("test.xml"), noArg(map(setret, [
